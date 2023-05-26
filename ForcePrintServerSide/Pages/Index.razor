@@ -1,0 +1,90 @@
+﻿@page "/"
+
+@using System.Reflection;
+@using System.Text
+@using System.Text.RegularExpressions
+@using System.Drawing
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Net;
+@using System.Net.Http;
+@using Microsoft.JSInterop
+@using Syncfusion.Blazor.BarcodeGenerator;
+
+@inject IJSRuntime JSRuntime
+@inject HttpClient httpClient
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<div id = "labelContainer">
+    <h2>1</h2>
+    <h2>2</h2>
+    <h3>3</h3>
+    <h3>4</h3>
+    <h3>5</h3>
+    <h4>6</h4>
+    <h5>7</h5>
+    <SfBarcodeGenerator Width="200px" Height="150px" Type="@BarcodeType.Code128" Value="628286"></SfBarcodeGenerator>
+</div>
+<br>
+<Button @onclick="PrintLabel">Print</Button>
+
+
+@code {
+    private const string JavaScriptInteropName = "printInterop";
+
+    private async Task PrintLabel()
+    {
+        //await JSRuntime.InvokeVoidAsync($"{JavaScriptInteropName}.printLabel");
+
+        // Create a print request object with the necessary information
+        var printRequest = new PrintRequest
+        {
+            LabelText = "Hello, World!",
+            PrinterName = "Printer1"
+            // Add any other relevant information needed for printing
+        };
+
+        // Send the print request to the client-side application
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync("http://localhost:5039/", printRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Print request sent successfully
+                Console.WriteLine("Print request sent successfully.");
+            }
+            else
+            {
+                // Failed to send print request
+                Console.WriteLine("Failed to send print request. " + response.ReasonPhrase);
+
+                // Bad request
+                Console.WriteLine("Bad request. Status code: " + (int)response.StatusCode);
+
+                // Read response content
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Response content: " + responseContent);
+
+                // Read response headers
+                foreach (var header in response.Headers)
+                {
+                    Console.WriteLine(header.Key + ": " + string.Join(", ", header.Value));
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Exception: " + e.Message);
+        }
+    }
+
+    public class PrintRequest
+    {
+        public string LabelText { get; set; }
+        public string PrinterName { get; set; }
+    }
+
+}
